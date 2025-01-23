@@ -55,6 +55,8 @@ namespace Microsoft.IdentityModel.Protocols
         // refresh interval has passed.
         bool _refreshRequested;
 
+        AutoResetEvent _updateMetadata = new AutoResetEvent(false);
+        Task _updateMetadataTask;
 
         /// <summary>
         /// Instantiates a new <see cref="ConfigurationManager{T}"/> that manages automatic and controls refreshing on configuration data.
@@ -117,6 +119,7 @@ namespace Microsoft.IdentityModel.Protocols
             MetadataAddress = metadataAddress;
             _docRetriever = docRetriever;
             _configRetriever = configRetriever;
+            _updateMetadataTask = Task.Run(UpdateCurrentConfigurationUsingSignals);
         }
 
         /// <summary>
@@ -277,7 +280,10 @@ namespace Microsoft.IdentityModel.Protocols
                         { }
 #pragma warning restore CA1031 // Do not catch general exception types
 
-                        _ = Task.Run(UpdateCurrentConfiguration, CancellationToken.None);
+                        if (_updateMetadataTask == null || _updateMetadataTask.Status != TaskStatus.Running)
+                            _updateMetadataTask = Task.Run(UpdateCurrentConfigurationUsingSignals, CancellationToken.None);
+
+                        _updateMetadata.Set();
                     }
                     else
                     {
@@ -298,6 +304,15 @@ namespace Microsoft.IdentityModel.Protocols
                         LogHelper.MarkAsNonPII(SyncAfter),
                         LogHelper.MarkAsNonPII(fetchMetadataFailure)),
                     fetchMetadataFailure));
+        }
+
+        private void UpdateCurrentConfigurationUsingSignals()
+        {
+            while (true)
+            {
+                _updateMetadata.WaitOne();
+                UpdateCurrentConfiguration();
+            }
         }
 
         /// <summary>

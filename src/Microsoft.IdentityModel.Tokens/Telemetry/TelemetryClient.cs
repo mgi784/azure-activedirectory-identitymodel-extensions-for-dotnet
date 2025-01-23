@@ -20,7 +20,9 @@ namespace Microsoft.IdentityModel.Telemetry
             {
                 { TelemetryConstants.IdentityModelVersionTag, ClientVer },
                 { TelemetryConstants.MetadataAddressTag, metadataAddress },
-                { TelemetryConstants.OperationStatusTag, operationStatus }
+                { TelemetryConstants.OperationStatusTag, operationStatus },
+                { "TimeOfRequest", DateTime.UtcNow.ToLongTimeString() }
+
             };
 
             TelemetryDataRecorder.IncrementConfigurationRefreshRequestCounter(tagList);
@@ -33,7 +35,8 @@ namespace Microsoft.IdentityModel.Telemetry
                 { TelemetryConstants.IdentityModelVersionTag, ClientVer },
                 { TelemetryConstants.MetadataAddressTag, metadataAddress },
                 { TelemetryConstants.OperationStatusTag, operationStatus },
-                { TelemetryConstants.ExceptionTypeTag, exception.GetType().ToString() }
+                { TelemetryConstants.ExceptionTypeTag, exception.GetType().ToString() },
+                { "TimeOfRequest", DateTime.UtcNow.ToLongTimeString() }
             };
 
             TelemetryDataRecorder.IncrementConfigurationRefreshRequestCounter(tagList);
