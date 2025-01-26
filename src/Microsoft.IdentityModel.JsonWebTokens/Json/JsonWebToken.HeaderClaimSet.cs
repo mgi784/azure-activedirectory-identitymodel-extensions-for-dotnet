@@ -36,46 +36,13 @@ namespace Microsoft.IdentityModel.JsonWebTokens
                         LogHelper.MarkAsNonPII(reader.CurrentDepth),
                         LogHelper.MarkAsNonPII(reader.BytesConsumed))));
 
-            Dictionary<string, object> claims = new();
+            Dictionary<string, object> claims = [];
+
             while (true)
             {
                 if (reader.TokenType == JsonTokenType.PropertyName)
                 {
-                    if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Alg))
-                    {
-                        _alg = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Alg, ClassName, true);
-                        claims[JwtHeaderParameterNames.Alg] = _alg;
-                    }
-                    else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Cty))
-                    {
-                        _cty = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Cty, ClassName, true);
-                        claims[JwtHeaderParameterNames.Cty] = _cty;
-                    }
-                    else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Kid))
-                    {
-                        _kid = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Kid, ClassName, true);
-                        claims[JwtHeaderParameterNames.Kid] = _kid;
-                    }
-                    else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Typ))
-                    {
-                        _typ = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Typ, ClassName, true);
-                        claims[JwtHeaderParameterNames.Typ] = _typ;
-                    }
-                    else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.X5t))
-                    {
-                        _x5t = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.X5t, ClassName, true);
-                        claims[JwtHeaderParameterNames.X5t] = _x5t;
-                    }
-                    else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Zip))
-                    {
-                        _zip = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Zip, ClassName, true);
-                        claims[JwtHeaderParameterNames.Zip] = _zip;
-                    }
-                    else
-                    {
-                        string propertyName = reader.GetString();
-                        claims[propertyName] = JsonSerializerPrimitives.ReadPropertyValueAsObject(ref reader, propertyName, JsonClaimSet.ClassName, true);
-                    }
+                    ReadHeaderValue(ref reader, claims);
                 }
                 // We read a JsonTokenType.StartObject above, exiting and positioning reader at next token.
                 else if (JsonSerializerPrimitives.IsReaderAtTokenType(ref reader, JsonTokenType.EndObject, false))
@@ -85,6 +52,45 @@ namespace Microsoft.IdentityModel.JsonWebTokens
             };
 
             return new JsonClaimSet(claims);
+        }
+
+        private protected virtual void ReadHeaderValue(ref Utf8JsonReader reader, IDictionary<string, object> claims)
+        {
+            if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Alg))
+            {
+                _alg = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Alg, ClassName, true);
+                claims[JwtHeaderParameterNames.Alg] = _alg;
+            }
+            else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Cty))
+            {
+                _cty = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Cty, ClassName, true);
+                claims[JwtHeaderParameterNames.Cty] = _cty;
+            }
+            else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Kid))
+            {
+                _kid = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Kid, ClassName, true);
+                claims[JwtHeaderParameterNames.Kid] = _kid;
+            }
+            else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Typ))
+            {
+                _typ = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Typ, ClassName, true);
+                claims[JwtHeaderParameterNames.Typ] = _typ;
+            }
+            else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.X5t))
+            {
+                _x5t = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.X5t, ClassName, true);
+                claims[JwtHeaderParameterNames.X5t] = _x5t;
+            }
+            else if (reader.ValueTextEquals(JwtHeaderUtf8Bytes.Zip))
+            {
+                _zip = JsonSerializerPrimitives.ReadString(ref reader, JwtHeaderParameterNames.Zip, ClassName, true);
+                claims[JwtHeaderParameterNames.Zip] = _zip;
+            }
+            else
+            {
+                string propertyName = reader.GetString();
+                claims[propertyName] = JsonSerializerPrimitives.ReadPropertyValueAsObject(ref reader, propertyName, JsonClaimSet.ClassName, true);
+            }
         }
     }
 }

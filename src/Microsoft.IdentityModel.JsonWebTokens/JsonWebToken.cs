@@ -405,9 +405,20 @@ namespace Microsoft.IdentityModel.JsonWebTokens
         /// <exception cref="SecurityTokenMalformedException">Thrown if <paramref name="encodedTokenMemory"/> has more than 4 dots.</exception>
         internal void ReadToken(ReadOnlyMemory<char> encodedTokenMemory)
         {
-            // JWT must have 2 dots for JWS or 4 dots for JWE (a.b.c.d.e)
-            ReadOnlySpan<char> encodedTokenSpan = encodedTokenMemory.Span;
+            ReadToken(encodedTokenMemory.Span);
+        }
 
+        // JWT must have 2 dots for JWS or 4 dots for JWE (a.b.c.d.e)
+        /// <summary>
+        /// Converts a span into an instance of <see cref="JsonWebToken"/>.
+        /// </summary>
+        /// <param name="encodedTokenSpan">A span representing a JSON Web Token (JWT) in JWS or JWE Compact Serialization format.</param>
+        /// <exception cref="SecurityTokenMalformedException">Thrown if <paramref name="encodedTokenSpan"/> is malformed, a valid JWT should have either 2 dots (JWS) or 4 dots (JWE).</exception>
+        /// <exception cref="SecurityTokenMalformedException">Thrown if <paramref name="encodedTokenSpan"/> does not have a non-empty authentication tag after the 4th dot for a JWE.</exception>
+        /// <exception cref="SecurityTokenMalformedException">Thrown if <paramref name="encodedTokenSpan"/> has more than 4 dots.</exception>
+        internal void ReadToken(ReadOnlySpan<char> encodedTokenSpan)
+        {
+            // JWT must have 2 dots for JWS or 4 dots for JWE (a.b.c.d.e)
             Dot1 = encodedTokenSpan.IndexOf('.');
             if (Dot1 == -1 || Dot1 == encodedTokenSpan.Length - 1)
                 throw LogHelper.LogExceptionMessage(new SecurityTokenMalformedException(LogMessages.IDX14100));
