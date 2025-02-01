@@ -156,17 +156,74 @@ namespace Microsoft.IdentityModel.Xml
             // <KeyName>
             else if (TryReadKeyName(reader, out var keyName))
                 keyInfo.KeyName = keyName;
+            // SecurityTokenReference
+            //< o:SecurityTokenReference xmlns:o = ""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"">
+            //  < o:KeyIdentifier ValueType = ""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509SubjectKeyIdentifier"" EncodingType=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"">Vh9pzVN05xA4tLBVTmkknXdu40I=</o:KeyIdentifier>
+            //</ o:SecurityTokenReference >
+            else if (TryReadSecurityTokenReference(reader, out var securityTokenReference))
+                keyInfo.SecurityTokenReference = securityTokenReference;
+            else if (TryReadBinarySecret(reader, out string secret))
+            {
+                keyInfo.BinarySecret = secret;
+                return true;
+            }
             // <KeyValue>
             else if (reader.IsStartElement(XmlSignatureConstants.Elements.KeyValue, XmlSignatureConstants.Namespace))
             {
                 reader.ReadStartElement(XmlSignatureConstants.Elements.KeyValue, XmlSignatureConstants.Namespace);
-                if (!TryReadKeyValueType(reader, ref keyInfo)) return false;
+                if (!TryReadKeyValueType(reader, ref keyInfo))
+                    return false;
 
                 // </KeyValue>
                 reader.ReadEndElement();
             }
+            else if (reader.IsStartElement(XmlSignatureConstants.Elements.EncryptedKey))
+            {
+                if (TryReadEncryptedKey(reader, out var encryptedKey))
+                    keyInfo.EncryptedKey = encryptedKey;
+                else
+                    return false;
+            }
             else
                 return false;
+
+            return true;
+        }
+
+        private static bool TryReadBinarySecret(XmlReader reader, out string secret)
+        {
+            secret = null;
+            if (!reader.IsStartElement("BinarySecret", "http://docs.oasis-open.org/ws-sx/ws-trust/200512"))
+                return false;
+
+            secret = reader.ReadElementContentAsString();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Reads the "SecurityTokenReference" element conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-X509Data.
+        /// </summary>
+        /// <param name="reader">A <see cref="XmlReader"/> positioned on a <see cref="XmlSignatureConstants.Elements.X509IssuerSerial"/> element.</param>
+        /// <param name="securityTokenReference"></param>
+        private static bool TryReadSecurityTokenReference(XmlReader reader, out SecurityTokenReference securityTokenReference)
+        {
+            securityTokenReference = null;
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.SecurityTokenReference, XmlSignatureConstants.SecurityJan2004Namespace))
+                return false;
+
+            reader.ReadStartElement(XmlSignatureConstants.Elements.SecurityTokenReference, XmlSignatureConstants.SecurityJan2004Namespace);
+
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.KeyIdentifier, XmlSignatureConstants.SecurityJan2004Namespace))
+                return false;
+
+            string valueType = reader.GetAttribute("ValueType", null);
+            string encodingType = reader.GetAttribute("EncodingType", null);
+            string value = reader.ReadElementContentAsString(XmlSignatureConstants.Elements.KeyIdentifier, XmlSignatureConstants.SecurityJan2004Namespace);
+
+            reader.ReadEndElement();
+
+            securityTokenReference = new SecurityTokenReference(new SecurityKeyIdentifier(valueType, encodingType, value));
 
             return true;
         }
@@ -232,7 +289,6 @@ namespace Microsoft.IdentityModel.Xml
             return true;
         }
 
-
         /// <summary>
         /// Attempts to read the <see cref="XmlSignatureConstants.Elements.KeyName"/> element conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-KeyName.
         /// </summary>
@@ -293,10 +349,18 @@ namespace Microsoft.IdentityModel.Xml
             if (reader.IsEmptyElement)
                 throw XmlUtil.LogReadException(LogMessages.IDX30108);
 
+            // <KeyInfo xmlns=""http://www.w3.org/2000/09/xmldsig#"">
+            //   <trust:BinarySecret xmlns:trust=""http://docs.oasis-open.org/ws-sx/ws-trust/200512"">UTX4nQ06p+Zgme+9aGzNgMXLfrrpzemX</trust:BinarySecret>
+            // </KeyInfo>
+
             reader.ReadStartElement(XmlSignatureConstants.Elements.X509Data, XmlSignatureConstants.Namespace);
             while (reader.IsStartElement())
             {
-                if (reader.IsStartElement(XmlSignatureConstants.Elements.X509Certificate, XmlSignatureConstants.Namespace))
+                if (reader.IsStartElement(XmlSignatureConstants.Elements.SecurityTokenReference, XmlSignatureConstants.Namespace))
+                {
+                    data.SecurityTokenReference = ReadSecurityTokenReference(reader);
+                }
+                else if (reader.IsStartElement(XmlSignatureConstants.Elements.X509Certificate, XmlSignatureConstants.Namespace))
                 {
                     data.Certificates.Add(reader.ReadElementContentAsString());
                 }
@@ -345,6 +409,59 @@ namespace Microsoft.IdentityModel.Xml
         }
 
         /// <summary>
+        /// Attempts to read the <see cref="XmlSignatureConstants.Elements.X509Data"/> element conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-X509Data.
+        /// </summary>
+        /// <param name="reader">A <see cref="XmlReader"/> positioned on a <see cref="XmlSignatureConstants.Elements.EncryptedKey"/> element.</param>
+        /// <param name="encryptedKey">The parsed <see cref="XmlSignatureConstants.Elements.EncryptedKey"/> element.</param>
+        protected virtual bool TryReadEncryptedKey(XmlReader reader, out EncryptedKey encryptedKey)
+        {
+            if (reader == null)
+                throw LogArgumentNullException(nameof(reader));
+
+            encryptedKey = null;
+
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.EncryptedKey, XmlSignatureConstants.Namespace))
+                return false;
+
+            reader.ReadStartElement(XmlSignatureConstants.Elements.EncryptedKey, XmlSignatureConstants.Namespace);
+
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.EncryptionMethod, XmlSignatureConstants.Namespace))
+                throw XmlUtil.LogReadException(
+                    LogMessages.IDX30011,
+                    XmlSignatureConstants.Namespace,
+                    XmlSignatureConstants.Elements.EncryptionMethod,
+                    reader.NamespaceURI,
+                    reader.LocalName);
+
+            string algorithm = reader.GetAttribute(XmlSignatureConstants.Attributes.Algorithm);
+            KeyInfo keyInfo = ReadKeyInfo(reader);
+
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.CipherData, XmlSignatureConstants.Namespace))
+                throw XmlUtil.LogReadException(
+                    LogMessages.IDX30011,
+                    XmlSignatureConstants.Namespace,
+                    XmlSignatureConstants.Elements.CipherData,
+                    reader.NamespaceURI,
+                    reader.LocalName);
+
+            reader.ReadStartElement(XmlSignatureConstants.Elements.CipherData, XmlSignatureConstants.Namespace);
+
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.CipherValue, XmlSignatureConstants.Namespace))
+                throw XmlUtil.LogReadException(
+                    LogMessages.IDX30011,
+                    XmlSignatureConstants.Namespace,
+                    XmlSignatureConstants.Elements.CipherValue,
+                    reader.NamespaceURI,
+                    reader.LocalName);
+
+            string cipherValue = reader.ReadElementContentAsString(XmlSignatureConstants.Elements.CipherValue, XmlSignatureConstants.Namespace);
+            reader.ReadEndElement();
+            encryptedKey = new EncryptedKey(algorithm, keyInfo, cipherValue);
+
+            return true;
+        }
+
+        /// <summary>
         /// Reads the "X509IssuerSerial" element conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-X509Data.
         /// </summary>
         /// <param name="reader">A <see cref="XmlReader"/> positioned on a <see cref="XmlSignatureConstants.Elements.X509IssuerSerial"/> element.</param>
@@ -365,6 +482,40 @@ namespace Microsoft.IdentityModel.Xml
             reader.ReadEndElement();
 
             return new IssuerSerial(issuerName, serialNumber);
+        }
+
+        /// <summary>
+        /// Reads the "SecurityTokenReference" element conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-X509Data.
+        /// </summary>
+        /// <param name="reader">A <see cref="XmlReader"/> positioned on a <see cref="XmlSignatureConstants.Elements.X509IssuerSerial"/> element.</param>
+        private static string ReadBinarySecret(XmlReader reader)
+        {
+            if (!reader.IsStartElement("BinarySecret"))
+                throw XmlUtil.LogReadException(LogMessages.IDX30011, XmlSignatureConstants.Namespace, "BinarySecret", reader.NamespaceURI, reader.LocalName);
+
+            string value = reader.ReadElementContentAsString();
+
+            return value;
+        }
+
+        /// <summary>
+        /// Reads the "SecurityTokenReference" element conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-X509Data.
+        /// </summary>
+        /// <param name="reader">A <see cref="XmlReader"/> positioned on a <see cref="XmlSignatureConstants.Elements.X509IssuerSerial"/> element.</param>
+        private static SecurityTokenReference ReadSecurityTokenReference(XmlReader reader)
+        {
+            reader.ReadStartElement(XmlSignatureConstants.Elements.SecurityTokenReference, XmlSignatureConstants.Namespace);
+
+            if (!reader.IsStartElement(XmlSignatureConstants.Elements.KeyIdentifier, XmlSignatureConstants.Namespace))
+                throw XmlUtil.LogReadException(LogMessages.IDX30011, XmlSignatureConstants.Namespace, XmlSignatureConstants.Elements.KeyIdentifier, reader.NamespaceURI, reader.LocalName);
+
+            string valueType = reader.GetAttribute("ValueType", null);
+            string encodingType = reader.GetAttribute("EncodingType", null);
+            string value = reader.ReadElementContentAsString(XmlSignatureConstants.Elements.KeyIdentifier, XmlSignatureConstants.Namespace);
+
+            reader.ReadEndElement();
+
+            return new SecurityTokenReference(new SecurityKeyIdentifier(valueType, encodingType, value));
         }
 
         /// <summary>
@@ -829,6 +980,17 @@ namespace Microsoft.IdentityModel.Xml
                     writer.WriteElementString(keyInfo.Prefix, XmlSignatureConstants.Elements.X509SubjectName, XmlSignatureConstants.Namespace, data.SubjectName);
                 }
 
+                if (data.SecurityTokenReference != null)
+                {
+                    writer.WriteStartElement(keyInfo.Prefix, XmlSignatureConstants.Elements.SecurityTokenReference, XmlSignatureConstants.Namespace);
+                    writer.WriteStartElement(keyInfo.Prefix, XmlSignatureConstants.Elements.KeyIdentifier, XmlSignatureConstants.Namespace);
+                    writer.WriteAttributeString("ValueType", data.SecurityTokenReference.SecurityKeyIdentifier.ValueType);
+                    writer.WriteAttributeString("EncodingType", data.SecurityTokenReference.SecurityKeyIdentifier.EncodingType);
+                    writer.WriteString(data.SecurityTokenReference.SecurityKeyIdentifier.Value);
+                    writer.WriteEndElement();
+                    writer.WriteEndElement();
+                }
+
                 foreach (var certificate in data.Certificates)
                 {
                     // <X509Certificate>...</X509Certificate>
@@ -952,7 +1114,6 @@ namespace Microsoft.IdentityModel.Xml
             // </Reference>
             writer.WriteEndElement();
         }
-
         /// <summary>
         /// Writes the contents of a <see cref="Signature"/> as XML conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-Signature.
         /// </summary>
@@ -965,6 +1126,23 @@ namespace Microsoft.IdentityModel.Xml
         /// <exception cref="XmlWriteException">if <see cref="Signature.SignedInfo"/> is null.</exception>
         /// <exception cref="XmlWriteException">if one of the values in <see cref="Reference.Transforms"/> is null or empty.</exception>
         public virtual void WriteSignature(XmlWriter writer, Signature signature)
+        {
+            WriteSignature(writer, signature, null);
+        }
+
+        /// <summary>
+        /// Writes the contents of a <see cref="Signature"/> as XML conforming to https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-Signature.
+        /// </summary>
+        /// <param name="writer">the <see cref="XmlWriter"/> to use.</param>
+        /// <param name="signature">the <see cref="Signature"/>to write.</param>
+        /// <param name="securityTokenReference"></param>
+        /// <remarks>Assumes the &lt;SignatureValue> has been calculated, no canonicalization or signature calculation is performed.</remarks>
+        /// <exception cref="ArgumentNullException">if <paramref name="writer"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">if <paramref name="signature"/> is null.</exception>
+        /// <exception cref="XmlWriteException">if <see cref="Signature.SignatureValue"/> is null or empty.</exception>
+        /// <exception cref="XmlWriteException">if <see cref="Signature.SignedInfo"/> is null.</exception>
+        /// <exception cref="XmlWriteException">if one of the values in <see cref="Reference.Transforms"/> is null or empty.</exception>
+        public virtual void WriteSignature(XmlWriter writer, Signature signature, SecurityTokenReference securityTokenReference)
         {
             if (writer == null)
                 throw LogArgumentNullException(nameof(writer));

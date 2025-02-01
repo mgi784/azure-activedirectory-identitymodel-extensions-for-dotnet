@@ -13,6 +13,7 @@ using System.Xml;
 using Microsoft.IdentityModel.Abstractions;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens.Saml;
+using Microsoft.IdentityModel.Xml;
 using static Microsoft.IdentityModel.Logging.LogHelper;
 
 using TokenLogMessages = Microsoft.IdentityModel.Tokens.LogMessages;
@@ -1384,6 +1385,17 @@ namespace Microsoft.IdentityModel.Tokens.Saml2
         /// <exception cref="ArgumentNullException">If <see cref="Saml2SecurityToken.Assertion"/> is null.</exception>
         public override void WriteToken(XmlWriter writer, SecurityToken securityToken)
         {
+            WriteToken(writer, securityToken, null);
+        }
+
+        /// <summary>
+        /// Writes a <see cref="Saml2SecurityToken"/> using the XmlWriter.
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="securityToken"></param>
+        /// <param name="securityTokenReference"></param>
+        public void WriteToken(XmlWriter writer, SecurityToken securityToken, SecurityTokenReference securityTokenReference)
+        {
             if (writer == null)
                 throw LogArgumentNullException(nameof(writer));
 
@@ -1397,7 +1409,7 @@ namespace Microsoft.IdentityModel.Tokens.Saml2
             if (samlToken.Assertion == null)
                 throw LogArgumentNullException(nameof(samlToken.Assertion));
 
-            Serializer.WriteAssertion(writer, samlToken.Assertion);
+            Serializer.WriteAssertion(writer, samlToken.Assertion, securityTokenReference);
         }
     }
 }

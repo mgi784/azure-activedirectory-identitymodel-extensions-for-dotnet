@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.IdentityModel.Abstractions;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.IdentityModel.Xml;
 using static Microsoft.IdentityModel.Logging.LogHelper;
 using TokenLogMessages = Microsoft.IdentityModel.Tokens.LogMessages;
 
@@ -1314,6 +1315,21 @@ namespace Microsoft.IdentityModel.Tokens.Saml
         /// <exception cref="ArgumentNullException">if <see cref="SamlSecurityToken.Assertion"/> is null.</exception>
         public override void WriteToken(XmlWriter writer, SecurityToken token)
         {
+            WriteToken(writer, token, null);
+        }
+
+        /// <summary>
+        /// Serializes to XML a securityToken of the type handled by this instance.
+        /// </summary>
+        /// <param name="writer">The XML writer.</param>
+        /// <param name="token">A securityToken of type <see cref="TokenType"/>.</param>
+        /// <param name="securityTokenReference"></param>
+        /// <exception cref="ArgumentNullException">if the <paramref name="writer"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">if the <paramref name="token"/> is null.</exception>
+        /// <exception cref="ArgumentException">if the token is not a <see cref="SamlSecurityToken"/>.</exception>
+        /// <exception cref="ArgumentNullException">if <see cref="SamlSecurityToken.Assertion"/> is null.</exception>
+        public void WriteToken(XmlWriter writer, SecurityToken token, SecurityTokenReference securityTokenReference)
+        {
             if (writer == null)
                 throw LogArgumentNullException(nameof(writer));
 
@@ -1327,7 +1343,7 @@ namespace Microsoft.IdentityModel.Tokens.Saml
             if (samlToken.Assertion == null)
                 throw LogArgumentNullException(nameof(samlToken.Assertion));
 
-            Serializer.WriteAssertion(writer, samlToken.Assertion);
+            Serializer.WriteAssertion(writer, samlToken.Assertion, securityTokenReference);
         }
 
         #endregion methods

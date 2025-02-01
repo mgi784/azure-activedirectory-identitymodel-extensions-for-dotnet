@@ -1510,6 +1510,17 @@ namespace Microsoft.IdentityModel.Tokens.Saml2
         /// <exception cref="InvalidOperationException">The SAML2 authentication, attribute, and authorization decision <see cref="Saml2Statement"/> require a <see cref="Saml2Subject"/>.</exception>
         public virtual void WriteAssertion(XmlWriter writer, Saml2Assertion assertion)
         {
+            WriteAssertion(writer, assertion, null);
+        }
+
+        /// <summary>
+        /// Writes the &lt;Assertion> element.
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="assertion"></param>
+        /// <param name="securityTokenReference"></param>
+        public virtual void WriteAssertion(XmlWriter writer, Saml2Assertion assertion, SecurityTokenReference securityTokenReference)
+        {
             if (writer == null)
                 throw LogArgumentNullException(nameof(writer));
 
@@ -1521,7 +1532,9 @@ namespace Microsoft.IdentityModel.Tokens.Saml2
             // dispose the inner writer, which we don't properly own.
             EnvelopedSignatureWriter signatureWriter = null;
             if (assertion.SigningCredentials != null)
-                writer = signatureWriter = new EnvelopedSignatureWriter(writer, assertion.SigningCredentials, assertion.Id.Value, assertion.InclusiveNamespacesPrefixList) { DSigSerializer = DSigSerializer };
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                writer = signatureWriter = new EnvelopedSignatureWriter(writer, assertion.SigningCredentials, assertion.Id.Value, assertion.InclusiveNamespacesPrefixList, securityTokenReference) { DSigSerializer = DSigSerializer };
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             if (assertion.Subject == null)
             {

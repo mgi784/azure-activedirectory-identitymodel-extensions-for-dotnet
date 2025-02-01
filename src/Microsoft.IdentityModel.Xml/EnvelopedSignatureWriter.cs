@@ -39,6 +39,7 @@ namespace Microsoft.IdentityModel.Xml
         private bool _signaturePlaceholderWritten;
         private SigningCredentials _signingCredentials;
         private MemoryStream _internalStream;
+        private SecurityTokenReference _securityTokenReference;
         private object _signatureLock = new object();
 
         /// <summary>
@@ -70,6 +71,25 @@ namespace Microsoft.IdentityModel.Xml
         /// <exception cref="ArgumentNullException">if <paramref name="signingCredentials"/> is null.</exception>
         /// <exception cref="ArgumentNullException">if <paramref name="referenceId"/> is null or Empty.</exception>
         public EnvelopedSignatureWriter(XmlWriter writer, SigningCredentials signingCredentials, string referenceId, string inclusivePrefixList)
+            : this(writer, signingCredentials, referenceId, inclusivePrefixList, null)
+        {
+
+        }
+
+        /// <summary>
+        /// Initializes an instance of <see cref="EnvelopedSignatureWriter"/>. The returned writer can be directly used
+        /// to write the envelope. The signature will be automatically generated when
+        /// the envelope is completed.
+        /// </summary>
+        /// <param name="writer">Writer to wrap/</param>
+        /// <param name="signingCredentials">SigningCredentials to be used to generate the signature.</param>
+        /// <param name="referenceId">The reference Id of the envelope.</param>
+        /// <param name="inclusivePrefixList">inclusive prefix list to use for exclusive canonicalization.</param>
+        /// <param name="securityTokenReference"></param>
+        /// <exception cref="ArgumentNullException">if <paramref name="writer"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">if <paramref name="signingCredentials"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">if <paramref name="referenceId"/> is null or Empty.</exception>
+        public EnvelopedSignatureWriter(XmlWriter writer, SigningCredentials signingCredentials, string referenceId, string inclusivePrefixList, SecurityTokenReference securityTokenReference)
         {
             _originalWriter = writer ?? throw LogArgumentNullException(nameof(writer));
             _signingCredentials = signingCredentials ?? throw LogArgumentNullException(nameof(signingCredentials));
@@ -84,6 +104,7 @@ namespace Microsoft.IdentityModel.Xml
             InnerWriter.StartCanonicalization(_canonicalStream, false, XmlUtil.TokenizeInclusiveNamespacesPrefixList(_inclusiveNamespacesPrefixList));
             InternalWriter = CreateTextWriter(_internalStream, Encoding.UTF8, false);
             _signaturePlaceholderWritten = false;
+            _securityTokenReference = securityTokenReference;
         }
 
         /// <summary>
@@ -122,7 +143,7 @@ namespace Microsoft.IdentityModel.Xml
                 while (xmlTokenStreamReader.Read() != false) ;
 
                 var xmlTokenStreamWriter = new XmlTokenStreamWriter(xmlTokenStreamReader.TokenStream);
-                xmlTokenStreamWriter.WriteAndReplaceSignature(_originalWriter, signature, DSigSerializer);
+                xmlTokenStreamWriter.WriteAndReplaceSignature(_originalWriter, signature, DSigSerializer, _securityTokenReference);
             }
             // write the signature into the internalStream and write the complete internalStream, as a node, into the originalWriter.
             else
@@ -197,9 +218,10 @@ namespace Microsoft.IdentityModel.Xml
 
                     try
                     {
+                        KeyInfo keyInfo = _securityTokenReference == null ? new KeyInfo(_signingCredentials.Key) : new KeyInfo(_securityTokenReference);
                         return new Signature
                         {
-                            KeyInfo = new KeyInfo(_signingCredentials.Key),
+                            KeyInfo = keyInfo,
                             SignatureValue = Convert.ToBase64String(provider.Sign(canonicalSignedInfoStream.ToArray())),
                             SignedInfo = signedInfo,
                         };

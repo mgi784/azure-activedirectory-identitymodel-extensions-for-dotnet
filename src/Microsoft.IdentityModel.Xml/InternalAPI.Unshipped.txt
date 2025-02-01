@@ -1,7 +1,21 @@
+Microsoft.IdentityModel.Xml.EncryptedKey
+Microsoft.IdentityModel.Xml.EncryptedKey.CipherData.get -> string
+Microsoft.IdentityModel.Xml.EncryptedKey.EncryptedKey(string encryptionMethod, Microsoft.IdentityModel.Xml.KeyInfo keyInfo, string cipherData) -> void
+Microsoft.IdentityModel.Xml.EncryptedKey.EncryptionMethod.get -> string
+Microsoft.IdentityModel.Xml.EncryptedKey.KeyInfo.get -> Microsoft.IdentityModel.Xml.KeyInfo
 Microsoft.IdentityModel.Xml.Reference.Verify(Microsoft.IdentityModel.Tokens.CryptoProviderFactory cryptoProviderFactory, Microsoft.IdentityModel.Tokens.CallContext callContext) -> Microsoft.IdentityModel.Tokens.SignatureValidationError
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.EncodingType.get -> string
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.SecurityKeyIdentifier(string valueType, string encodingType, string value) -> void
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.Value.get -> string
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.Value.set -> void
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.ValueType.get -> string
+Microsoft.IdentityModel.Xml.SecurityTokenReference
+Microsoft.IdentityModel.Xml.SecurityTokenReference.SecurityKeyIdentifier.get -> Microsoft.IdentityModel.Xml.SecurityKeyIdentifier
+Microsoft.IdentityModel.Xml.SecurityTokenReference.SecurityTokenReference(Microsoft.IdentityModel.Xml.SecurityKeyIdentifier securityKeyIdentifier) -> void
 Microsoft.IdentityModel.Xml.Signature.Verify(Microsoft.IdentityModel.Tokens.SecurityKey key, Microsoft.IdentityModel.Tokens.CryptoProviderFactory cryptoProviderFactory, Microsoft.IdentityModel.Tokens.CallContext callContext) -> Microsoft.IdentityModel.Tokens.SignatureValidationError
 Microsoft.IdentityModel.Xml.SignedInfo.Verify(Microsoft.IdentityModel.Tokens.CryptoProviderFactory cryptoProviderFactory, Microsoft.IdentityModel.Tokens.CallContext callContext) -> Microsoft.IdentityModel.Tokens.SignatureValidationError
-Microsoft.IdentityModel.Xml.XmlValidationError
-Microsoft.IdentityModel.Xml.XmlValidationError.XmlValidationError(Microsoft.IdentityModel.Tokens.MessageDetail messageDetail, Microsoft.IdentityModel.Tokens.ValidationFailureType validationFailureType, System.Type exceptionType, System.Diagnostics.StackFrame stackFrame, System.Exception innerException = null) -> void
+Microsoft.IdentityModel.Xml.X509Data.SecurityTokenReference.get -> Microsoft.IdentityModel.Xml.SecurityTokenReference
+Microsoft.IdentityModel.Xml.X509Data.SecurityTokenReference.set -> void
+Microsoft.IdentityModel.Xml.XmlTokenStreamWriter.WriteAndReplaceSignature(System.Xml.XmlWriter writer, Microsoft.IdentityModel.Xml.Signature signature, Microsoft.IdentityModel.Xml.DSigSerializer dSigSerializer, Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void
 Microsoft.IdentityModel.Xml.XmlValidationException.SetValidationError(Microsoft.IdentityModel.Tokens.ValidationError validationError) -> void
-override Microsoft.IdentityModel.Xml.XmlValidationError.GetException() -> System.Exception

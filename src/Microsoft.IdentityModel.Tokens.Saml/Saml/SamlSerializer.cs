@@ -1016,6 +1016,22 @@ namespace Microsoft.IdentityModel.Tokens.Saml
         /// <exception cref="SamlSecurityTokenWriteException">if <see cref="SamlAssertion.Statements"/>.Count == 0.</exception>
         public virtual void WriteAssertion(XmlWriter writer, SamlAssertion assertion)
         {
+        }
+
+        /// <summary>
+        /// Writes the &lt;Assertion> element.
+        /// </summary>
+        /// <param name="writer">A <see cref="XmlWriter"/> to serialize the <see cref="SamlAssertion"/>.</param>
+        /// <param name="assertion">The <see cref="SamlAssertion"/> to serialize.</param>
+        /// <param name="securityTokenReference"></param>
+        /// <exception cref="ArgumentNullException">if <paramref name="writer"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">if <paramref name="assertion"/> is null.</exception>
+        /// <exception cref="SamlSecurityTokenWriteException">if <see cref="SamlAssertion.AssertionId"/> is null or empty.</exception>
+        /// <exception cref="SamlSecurityTokenWriteException">if <see cref="SamlAssertion.AssertionId"/> is not well formed. See <see cref="SamlSerializer.IsAssertionIdValid(string)"/>.</exception>
+        /// <exception cref="SamlSecurityTokenWriteException">if <see cref="SamlAssertion.Issuer"/> is null or empty.</exception>
+        /// <exception cref="SamlSecurityTokenWriteException">if <see cref="SamlAssertion.Statements"/>.Count == 0.</exception>
+        public virtual void WriteAssertion(XmlWriter writer, SamlAssertion assertion, SecurityTokenReference securityTokenReference)
+        {
             if (writer == null)
                 throw LogArgumentNullException(nameof(writer));
 
@@ -1039,7 +1055,9 @@ namespace Microsoft.IdentityModel.Tokens.Saml
             // dispose the inner writer, which we don't properly own.
             EnvelopedSignatureWriter signatureWriter = null;
             if (assertion.SigningCredentials != null)
-                writer = signatureWriter = new EnvelopedSignatureWriter(writer, assertion.SigningCredentials, assertion.AssertionId, assertion.InclusiveNamespacesPrefixList) { DSigSerializer = DSigSerializer };
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                writer = signatureWriter = new EnvelopedSignatureWriter(writer, assertion.SigningCredentials, assertion.AssertionId, assertion.InclusiveNamespacesPrefixList, securityTokenReference) { DSigSerializer = DSigSerializer };
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             try
             {

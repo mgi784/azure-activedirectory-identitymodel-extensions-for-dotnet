@@ -1,0 +1,4 @@
+Microsoft.IdentityModel.Tokens.Saml.SamlSecurityTokenHandler.WriteToken(System.Xml.XmlWriter writer, Microsoft.IdentityModel.Tokens.SecurityToken token, Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void
+Microsoft.IdentityModel.Tokens.Saml2.Saml2SecurityTokenHandler.WriteToken(System.Xml.XmlWriter writer, Microsoft.IdentityModel.Tokens.SecurityToken securityToken, Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void
+virtual Microsoft.IdentityModel.Tokens.Saml.SamlSerializer.WriteAssertion(System.Xml.XmlWriter writer, Microsoft.IdentityModel.Tokens.Saml.SamlAssertion assertion, Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void
+virtual Microsoft.IdentityModel.Tokens.Saml2.Saml2Serializer.WriteAssertion(System.Xml.XmlWriter writer, Microsoft.IdentityModel.Tokens.Saml2.Saml2Assertion assertion, Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void

@@ -197,7 +197,7 @@ namespace Microsoft.IdentityModel.Xml
             while (MoveToNext());
         }
 
-        internal void WriteAndReplaceSignature(XmlWriter writer, Signature signature, DSigSerializer dSigSerializer)
+        internal void WriteAndReplaceSignature(XmlWriter writer, Signature signature, DSigSerializer dSigSerializer, SecurityTokenReference securityTokenReference)
         {
             if (writer == null)
                 throw LogExceptionMessage(new ArgumentNullException(nameof(writer)));
@@ -222,7 +222,7 @@ namespace Microsoft.IdentityModel.Xml
                         // and write the signature using the provided DSigSerializer.
                         if (LocalName == EnvelopedSignatureWriter.SignaturePlaceholder)
                         {
-                            dSigSerializer.WriteSignature(writer, signature);
+                            dSigSerializer.WriteSignature(writer, signature, securityTokenReference);
                             include = false;
                         }
                         else
