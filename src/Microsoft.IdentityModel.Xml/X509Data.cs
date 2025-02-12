@@ -65,6 +65,15 @@ namespace Microsoft.IdentityModel.Xml
         }
 
         /// <summary>
+        /// Gets or sets the 'SecurityTokenReference' that is part of a 'X509Data'.
+        /// </summary>
+        internal SecurityTokenReference SecurityTokenReference
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets or sets the 'X509SKI' value that is a part of 'X509Data'.
         /// </summary>
         public string SKI

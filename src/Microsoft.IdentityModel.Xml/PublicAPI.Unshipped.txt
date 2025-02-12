@@ -1,1 +1,33 @@
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Attributes.EncodingType = "EncodingType" -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Attributes.ValueType = "ValueType" -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Elements.CipherData = "CipherData" -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Elements.CipherValue = "CipherValue" -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Elements.EncryptedKey = "EncryptedKey" -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Elements.EncryptionMethod = "EncryptionMethod" -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Elements.KeyIdentifier = "KeyIdentifier" -> string
+Microsoft.IdentityModel.Xml.EncryptedKey
+Microsoft.IdentityModel.Xml.EncryptedKey.CipherData.get -> string
+Microsoft.IdentityModel.Xml.EncryptedKey.EncryptedKey(string encryptionMethod, Microsoft.IdentityModel.Xml.KeyInfo keyInfo, string cipherData) -> void
+Microsoft.IdentityModel.Xml.EncryptedKey.EncryptionMethod.get -> string
+Microsoft.IdentityModel.Xml.EncryptedKey.KeyInfo.get -> Microsoft.IdentityModel.Xml.KeyInfo
+Microsoft.IdentityModel.Xml.KeyInfo.BinarySecret.get -> string
+Microsoft.IdentityModel.Xml.KeyInfo.BinarySecret.set -> void
+Microsoft.IdentityModel.Xml.KeyInfo.EncryptedKey.get -> Microsoft.IdentityModel.Xml.EncryptedKey
+Microsoft.IdentityModel.Xml.KeyInfo.EncryptedKey.set -> void
+Microsoft.IdentityModel.Xml.KeyInfo.KeyInfo(Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void
+Microsoft.IdentityModel.Xml.KeyInfo.SecurityTokenReference.get -> Microsoft.IdentityModel.Xml.SecurityTokenReference
+Microsoft.IdentityModel.Xml.KeyInfo.SecurityTokenReference.set -> void
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.EncodingType.get -> string
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.SecurityKeyIdentifier(string valueType, string encodingType, string value) -> void
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.Value.get -> string
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.Value.set -> void
+Microsoft.IdentityModel.Xml.SecurityKeyIdentifier.ValueType.get -> string
+Microsoft.IdentityModel.Xml.SecurityTokenReference
+Microsoft.IdentityModel.Xml.SecurityTokenReference.MatchesKey(Microsoft.IdentityModel.Tokens.SecurityKey securityKey) -> bool
+Microsoft.IdentityModel.Xml.SecurityTokenReference.SecurityKeyIdentifier.get -> Microsoft.IdentityModel.Xml.SecurityKeyIdentifier
+Microsoft.IdentityModel.Xml.SecurityTokenReference.SecurityTokenReference(Microsoft.IdentityModel.Xml.SecurityKeyIdentifier securityKeyIdentifier) -> void
 override Microsoft.IdentityModel.Xml.XmlValidationException.StackTrace.get -> string
+const Microsoft.IdentityModel.Xml.XmlSignatureConstants.Elements.SecurityTokenReference = "SecurityTokenReference" -> string
+virtual Microsoft.IdentityModel.Xml.DSigSerializer.TryReadEncryptedKey(System.Xml.XmlReader reader, out Microsoft.IdentityModel.Xml.EncryptedKey encryptedKey) -> bool
+virtual Microsoft.IdentityModel.Xml.DSigSerializer.WriteSignature(System.Xml.XmlWriter writer, Microsoft.IdentityModel.Xml.Signature signature, Microsoft.IdentityModel.Xml.SecurityTokenReference securityTokenReference) -> void

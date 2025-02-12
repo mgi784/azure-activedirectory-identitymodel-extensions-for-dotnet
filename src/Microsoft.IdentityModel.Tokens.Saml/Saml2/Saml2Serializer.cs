@@ -1521,7 +1521,9 @@ namespace Microsoft.IdentityModel.Tokens.Saml2
             // dispose the inner writer, which we don't properly own.
             EnvelopedSignatureWriter signatureWriter = null;
             if (assertion.SigningCredentials != null)
+#pragma warning disable CA2000 // Dispose objects before losing scope
                 writer = signatureWriter = new EnvelopedSignatureWriter(writer, assertion.SigningCredentials, assertion.Id.Value, assertion.InclusiveNamespacesPrefixList) { DSigSerializer = DSigSerializer };
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
             if (assertion.Subject == null)
             {
