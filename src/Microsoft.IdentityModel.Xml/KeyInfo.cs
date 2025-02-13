@@ -11,14 +11,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.IdentityModel.Xml
 {
-
     /// <summary>
     /// Represents a XmlDsig KeyInfo element as per:  https://www.w3.org/TR/2001/PR-xmldsig-core-20010820/#sec-KeyInfo
     /// </summary>
     /// <remarks>Only a single 'X509Certificate' is supported. Multiples that include intermediate and root certs are not supported.</remarks>
     public class KeyInfo : DSigElement
     {
-
         // TODO - IssuerSerial needs to have a structure as 'IssuerName' and 'SerialNumber'
         /// <summary>
         /// Initializes an instance of <see cref="KeyInfo"/>.
@@ -34,16 +32,6 @@ namespace Microsoft.IdentityModel.Xml
         public KeyInfo(X509Certificate2 certificate)
         {
             var data = new X509Data(certificate);
-            X509Data.Add(data);
-        }
-
-        /// <summary>
-        /// Initializes an instance of <see cref="KeyInfo"/>.
-        /// </summary>
-        /// <param name="securityTokenReference"></param>
-        public KeyInfo(SecurityTokenReference securityTokenReference)
-        {
-            var data = new X509Data { SecurityTokenReference = securityTokenReference };
             X509Data.Add(data);
         }
 
@@ -99,36 +87,9 @@ namespace Microsoft.IdentityModel.Xml
         }
 
         /// <summary>
-        ///
-        /// </summary>
-        public EncryptedKey EncryptedKey
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        ///
-        /// </summary>
-        public SecurityTokenReference SecurityTokenReference
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Gets the 'X509Data' value.
         /// </summary>
         public ICollection<X509Data> X509Data { get; } = new Collection<X509Data>();
-
-        /// <summary>
-        /// Get or sets the 'BinarySecret' value that is a part of 'X509Data'.
-        /// </summary>
-        public string BinarySecret
-        {
-            get;
-            set;
-        }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
@@ -181,28 +142,19 @@ namespace Microsoft.IdentityModel.Xml
 
             foreach (var data in X509Data)
             {
-                // compare key to SecurityTokenReference
-                if (data.SecurityTokenReference != null)
+                foreach (var certificate in data.Certificates)
                 {
-                    if (data.SecurityTokenReference.MatchesKey(key))
-                        return true;
-                }
-                else if (data.Certificates.Count > 0)
-                {
-                    foreach (var certificate in data.Certificates)
+                    // depending on the target, X509Certificate2 may be disposable
+                    X509Certificate2 cert = CertificateHelper.LoadX509Certificate(certificate);
+                    try
                     {
-                        // depending on the target, X509Certificate2 may be disposable
-                        X509Certificate2 cert = CertificateHelper.LoadX509Certificate(certificate);
-                        try
-                        {
-                            if (cert.Equals(key.Certificate))
-                                return true;
-                        }
-                        finally
-                        {
-                            if (cert is IDisposable disposable)
-                                disposable?.Dispose();
-                        }
+                        if (cert.Equals(key.Certificate))
+                            return true;
+                    }
+                    finally
+                    {
+                        if (cert is IDisposable disposable)
+                            disposable?.Dispose();
                     }
                 }
             }

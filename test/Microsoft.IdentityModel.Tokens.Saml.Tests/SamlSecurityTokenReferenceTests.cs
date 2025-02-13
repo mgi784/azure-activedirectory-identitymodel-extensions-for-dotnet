@@ -3,10 +3,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using Microsoft.IdentityModel.Logging;
+using CoreWCF.IdentityModel.Tokens;
 using Xunit;
 
 namespace Microsoft.IdentityModel.Tokens.Saml.Tests
@@ -16,70 +15,12 @@ namespace Microsoft.IdentityModel.Tokens.Saml.Tests
     /// </summary>
     public class SecurityTokenReferenceTests
     {
-        //static string s_saml1_2_10 = @"
-        //    <saml:Assertion MajorVersion=""1"" MinorVersion=""1"" AssertionID=""uuid-39accd5a-e463-4e1c-803f-d5c1732c7800"" Issuer=""urn:federation:MicrosoftOnline"" IssueInstant=""2025-02-06T04:47:27.032Z"" xmlns:saml=""urn:oasis:names:tc:SAML:1.0:assertion"">
-        //        <saml:Conditions NotBefore=""2025-02-06T04:47:27.032Z"" NotOnOrAfter=""2025-02-21T04:50:27.027Z"">
-        //            <saml:AudienceRestrictionCondition>
-        //                <saml:Audience>http://FYDIBOHF25SPDLT.coditeksdf.coditek.net</saml:Audience>
-        //            </saml:AudienceRestrictionCondition>
-        //        </saml:Conditions>
-        //        <saml:AuthenticationStatement AuthenticationMethod=""urn:oasis:names:tc:SAML:1.0:am:password"" AuthenticationInstant=""2025-02-06T04:47:27.032Z"">
-        //            <saml:Subject>
-        //                <saml:NameIdentifier Format=""http://schemas.xmlsoap.org/claims/upn"">/o3q1rTjLs3v3h1rKR8PD/CR1Gt+0M8oA6qe0OZ/9D0=@MicrosoftOnline.com</saml:NameIdentifier>
-        //                <saml:SubjectConfirmation>
-        //                    <saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:holder-of-key</saml:ConfirmationMethod>
-        //                    <KeyInfo xmlns=""http://www.w3.org/2000/09/xmldsig#"">
-        //                        <trust:BinarySecret xmlns:trust=""http://docs.oasis-open.org/ws-sx/ws-trust/200512"">UTX4nQ06p+Zgme+9aGzNgMXLfrrpzemX</trust:BinarySecret>
-        //                    </KeyInfo>
-        //                </saml:SubjectConfirmation>
-        //            </saml:Subject>
-        //        </saml:AuthenticationStatement>
-        //        <saml:AttributeStatement>
-        //            <saml:Subject>
-        //                <saml:NameIdentifier Format=""http://schemas.xmlsoap.org/claims/upn"">/o3q1rTjLs3v3h1rKR8PD/CR1Gt+0M8oA6qe0OZ/9D0=@MicrosoftOnline.com</saml:NameIdentifier>
-        //            </saml:Subject>
-        //            <saml:Attribute AttributeName=""EmailAddress"" AttributeNamespace=""http://schemas.xmlsoap.org/claims"">
-        //                <saml:AttributeValue>op_mbx01@coditeksdf.coditek.net</saml:AttributeValue>
-        //            </saml:Attribute>
-        //            <saml:Attribute AttributeName=""RequestorDomain"" AttributeNamespace=""http://schemas.microsoft.com/ws/2006/04/identity/claims"">
-        //                <saml:AttributeValue>outlook.com</saml:AttributeValue>
-        //            </saml:Attribute>
-        //            <saml:Attribute AttributeName=""action"" AttributeNamespace=""http://schemas.xmlsoap.org/ws/2006/12/authorization/claims"">
-        //                <saml:AttributeValue>MSExchange.MailTips</saml:AttributeValue>
-        //            </saml:Attribute>
-        //            <saml:Attribute AttributeName=""ThirdPartyRequested"" AttributeNamespace=""http://schemas.microsoft.com/ws/2006/04/identity/claims"">
-        //                <saml:AttributeValue>True</saml:AttributeValue>
-        //            </saml:Attribute>
-        //        </saml:AttributeStatement>
-        //        <Signature xmlns=""http://www.w3.org/2000/09/xmldsig#"">
-        //            <SignedInfo>
-        //                <CanonicalizationMethod Algorithm=""http://www.w3.org/2001/10/xml-exc-c14n#""/>
-        //                <SignatureMethod Algorithm=""http://www.w3.org/2000/09/xmldsig#rsa-sha1""/>
-        //                <Reference URI=""#uuid-39accd5a-e463-4e1c-803f-d5c1732c7800"">
-        //                    <Transforms>
-        //                        <Transform Algorithm=""http://www.w3.org/2000/09/xmldsig#enveloped-signature""/>
-        //                        <Transform Algorithm=""http://www.w3.org/2001/10/xml-exc-c14n#""/>
-        //                    </Transforms>
-        //                    <DigestMethod Algorithm=""http://www.w3.org/2000/09/xmldsig#sha1""/>
-        //                    <DigestValue>WqZ/ciJdnjrOn+9Z7X8bLdMt1Xw=</DigestValue>
-        //                </Reference>
-        //            </SignedInfo>
-        //        <SignatureValue>AC/yDGVAOxK16bvkfvCkhKJ+YvVMB1UswR7AaBlRP5xbUBoyWHOWfB90zRSsZXa6PuqI3n1U0prSRLqcvRGrYCQv6vcx0JmVQCC9xJnXwfsNRQZkr7cYbY4trfjgINtdJTAgihvjzVV+zvuZvwecPsZqTUX/BUj0wl8maObstRAx0tBBCCtHhyk5eMdM0t2ohzYuCsP+mYt1w5uX9EPdwkA5QiGNk5bbj8pGztMWLuyxEb6NCwauKrtJrubRxzlsAQAj4eNqUKclFdMWytFbFs5tkWGDfxiNdyJU62Ja4G6VHvYRjWviTK0JzoGBhpzE6t0GO0C6Lr0s2UY5LLS/dw==</SignatureValue>
-        //            <KeyInfo>
-        //                <o:SecurityTokenReference xmlns:o=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"">
-        //                    <o:KeyIdentifier ValueType=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509SubjectKeyIdentifier"" EncodingType=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"">Vh9pzVN05xA4tLBVTmkknXdu40I=</o:KeyIdentifier>
-        //                </o:SecurityTokenReference>
-        //            </KeyInfo>
-        //        </Signature>
-        //    </saml:Assertion>";
-
-        static string s_saml1_2_10_nospace = @"<saml:Assertion MajorVersion=""1"" MinorVersion=""1"" AssertionID=""uuid-39accd5a-e463-4e1c-803f-d5c1732c7800"" Issuer=""urn:federation:MicrosoftOnline"" IssueInstant=""2025-02-06T04:47:27.032Z"" xmlns:saml=""urn:oasis:names:tc:SAML:1.0:assertion""><saml:Conditions NotBefore=""2025-02-06T04:47:27.032Z"" NotOnOrAfter=""2025-02-21T04:50:27.027Z""><saml:AudienceRestrictionCondition><saml:Audience>http://FYDIBOHF25SPDLT.coditeksdf.coditek.net</saml:Audience></saml:AudienceRestrictionCondition></saml:Conditions><saml:AuthenticationStatement AuthenticationMethod=""urn:oasis:names:tc:SAML:1.0:am:password"" AuthenticationInstant=""2025-02-06T04:47:27.032Z""><saml:Subject><saml:NameIdentifier Format=""http://schemas.xmlsoap.org/claims/upn"">/o3q1rTjLs3v3h1rKR8PD/CR1Gt+0M8oA6qe0OZ/9D0=@MicrosoftOnline.com</saml:NameIdentifier><saml:SubjectConfirmation><saml:ConfirmationMethod>urn:oasis:names:tc:SAML:1.0:cm:holder-of-key</saml:ConfirmationMethod><KeyInfo xmlns=""http://www.w3.org/2000/09/xmldsig#""><trust:BinarySecret xmlns:trust=""http://docs.oasis-open.org/ws-sx/ws-trust/200512"">UTX4nQ06p+Zgme+9aGzNgMXLfrrpzemX</trust:BinarySecret></KeyInfo></saml:SubjectConfirmation></saml:Subject></saml:AuthenticationStatement><saml:AttributeStatement><saml:Subject><saml:NameIdentifier Format=""http://schemas.xmlsoap.org/claims/upn"">/o3q1rTjLs3v3h1rKR8PD/CR1Gt+0M8oA6qe0OZ/9D0=@MicrosoftOnline.com</saml:NameIdentifier></saml:Subject><saml:Attribute AttributeName=""EmailAddress"" AttributeNamespace=""http://schemas.xmlsoap.org/claims""><saml:AttributeValue>op_mbx01@coditeksdf.coditek.net</saml:AttributeValue></saml:Attribute><saml:Attribute AttributeName=""RequestorDomain"" AttributeNamespace=""http://schemas.microsoft.com/ws/2006/04/identity/claims""><saml:AttributeValue>outlook.com</saml:AttributeValue></saml:Attribute><saml:Attribute AttributeName=""action"" AttributeNamespace=""http://schemas.xmlsoap.org/ws/2006/12/authorization/claims""><saml:AttributeValue>MSExchange.MailTips</saml:AttributeValue></saml:Attribute><saml:Attribute AttributeName=""ThirdPartyRequested"" AttributeNamespace=""http://schemas.microsoft.com/ws/2006/04/identity/claims""><saml:AttributeValue>True</saml:AttributeValue></saml:Attribute></saml:AttributeStatement><Signature xmlns=""http://www.w3.org/2000/09/xmldsig#""><SignedInfo><CanonicalizationMethod Algorithm=""http://www.w3.org/2001/10/xml-exc-c14n#""/><SignatureMethod Algorithm=""http://www.w3.org/2000/09/xmldsig#rsa-sha1""/><Reference URI=""#uuid-39accd5a-e463-4e1c-803f-d5c1732c7800""><Transforms><Transform Algorithm=""http://www.w3.org/2000/09/xmldsig#enveloped-signature""/><Transform Algorithm=""http://www.w3.org/2001/10/xml-exc-c14n#""/></Transforms><DigestMethod Algorithm=""http://www.w3.org/2000/09/xmldsig#sha1""/><DigestValue>WqZ/ciJdnjrOn+9Z7X8bLdMt1Xw=</DigestValue></Reference></SignedInfo><SignatureValue>AC/yDGVAOxK16bvkfvCkhKJ+YvVMB1UswR7AaBlRP5xbUBoyWHOWfB90zRSsZXa6PuqI3n1U0prSRLqcvRGrYCQv6vcx0JmVQCC9xJnXwfsNRQZkr7cYbY4trfjgINtdJTAgihvjzVV+zvuZvwecPsZqTUX/BUj0wl8maObstRAx0tBBCCtHhyk5eMdM0t2ohzYuCsP+mYt1w5uX9EPdwkA5QiGNk5bbj8pGztMWLuyxEb6NCwauKrtJrubRxzlsAQAj4eNqUKclFdMWytFbFs5tkWGDfxiNdyJU62Ja4G6VHvYRjWviTK0JzoGBhpzE6t0GO0C6Lr0s2UY5LLS/dw==</SignatureValue><KeyInfo><o:SecurityTokenReference xmlns:o=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd""><o:KeyIdentifier ValueType=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509SubjectKeyIdentifier"" EncodingType=""http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"">Vh9pzVN05xA4tLBVTmkknXdu40I=</o:KeyIdentifier></o:SecurityTokenReference></KeyInfo></Signature></saml:Assertion>";
-
         [Fact]
         public void SecurityTokenReference()
         {
             IdentityModelEventSource.ShowPII = true;
             SamlSecurityTokenHandler samlHandler = new();
+            samlHandler.Serializer.DSigSerializer = new CoreWcfDSigSerializer();
 
 #pragma warning disable format
 #pragma warning disable SYSLIB0057
@@ -93,6 +34,8 @@ namespace Microsoft.IdentityModel.Tokens.Saml.Tests
             X509SecurityKey x509SecurityKey2 = new(x509Cert2);
 #pragma warning restore SYSLIB0057
 #pragma warning restore format
+
+            X509SubjectKeyIdentifierExtension skiExtension = x509Cert1.Extensions["2.5.29.14"] as X509SubjectKeyIdentifierExtension;
 
             TokenValidationParameters validationParameters = new()
             {
@@ -112,124 +55,7 @@ namespace Microsoft.IdentityModel.Tokens.Saml.Tests
             if (x509SubjectKeyIdentifierExtension == null)
                 throw new NotSupportedException("X509SubjectKeyIdentifierExtension is null");
 
-            samlHandler.ValidateToken(s_saml1_2_10_nospace, validationParameters, out SecurityToken validatedSamlTokenNoSpace);
-            samlHandler.ValidateToken(s_saml1_2_10_nospace, validationParameters, out SecurityToken validatedSamlToken);
-        }
-    }
-
-    public class Sha1CryptoProviderFactory : CryptoProviderFactory
-    {
-        public Sha1CryptoProviderFactory() : base(new InMemoryCryptoProviderCache(new CryptoProviderCacheOptions(), TaskCreationOptions.None, 50))
-        {
-        }
-
-        public Sha1CryptoProviderFactory(ICryptoProvider cryptoProvider)
-        {
-            CustomCryptoProvider = cryptoProvider;
-        }
-
-        public override SignatureProvider CreateForSigning(SecurityKey key, string algorithm)
-        {
-            if (algorithm == "http://www.w3.org/2000/09/xmldsig#rsa-sha1")
-                return null;
-            else
-                return base.CreateForSigning(key, algorithm);
-        }
-
-        public override SignatureProvider CreateForVerifying(SecurityKey key, string algorithm)
-        {
-            X509SecurityKey x509SecurityKey = key as X509SecurityKey;
-            if (algorithm == "http://www.w3.org/2000/09/xmldsig#rsa-sha1")
-            {
-                X509Certificate2 cert = x509SecurityKey.Certificate;
-                return new RSASha1SignatureProvider(key, cert, algorithm);
-            }
-            else
-                return base.CreateForVerifying(key, algorithm);
-        }
-
-        public override HashAlgorithm CreateHashAlgorithm(string algorithm)
-        {
-            if (algorithm == "http://www.w3.org/2000/09/xmldsig#sha1")
-                return SHA1.Create();
-
-            return base.CreateHashAlgorithm(algorithm);
-        }
-
-        public override KeyedHashAlgorithm CreateKeyedHashAlgorithm(byte[] keyBytes, string algorithm)
-        {
-            return base.CreateKeyedHashAlgorithm(keyBytes, algorithm);
-        }
-
-        public override bool IsSupportedAlgorithm(string algorithm)
-        {
-
-            if (algorithm == "http://www.w3.org/2000/09/xmldsig#sha1")
-                return true;
-            else if (algorithm == "http://www.w3.org/2000/09/xmldsig#rsa-sha1")
-                return true;
-            else
-                return base.IsSupportedAlgorithm(algorithm);
-        }
-
-        public override bool IsSupportedAlgorithm(string algorithm, SecurityKey key)
-        {
-            if (algorithm == "http://www.w3.org/2000/09/xmldsig#rsa-sha1")
-                return true;
-            else if (algorithm == "http://www.w3.org/2000/09/xmldsig#sha1")
-                return true;
-            else
-                return base.IsSupportedAlgorithm(algorithm, key);
-        }
-
-        public override void ReleaseHashAlgorithm(HashAlgorithm hashAlgorithm)
-        {
-            hashAlgorithm.Dispose();
-        }
-
-        public bool ReleaseHashAlgorithmCalled { get; set; }
-
-        public override void ReleaseSignatureProvider(SignatureProvider signatureProvider)
-        {
-            if (CustomCryptoProvider != null)
-                CustomCryptoProvider.Release(signatureProvider);
-            else
-                signatureProvider.Dispose();
-        }
-    }
-
-    public class RSASha1SignatureProvider : SignatureProvider
-    {
-        private X509SecurityKey _key;
-        private X509Certificate2 _cert;
-
-        public RSASha1SignatureProvider(SecurityKey key, X509Certificate2 cert, string algorithm) : base(key, algorithm)
-        {
-            _key = key as X509SecurityKey;
-            _cert = cert;
-        }
-
-        public override byte[] Sign(byte[] input)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool Verify(byte[] input, byte[] signature)
-        {
-            RSA rsa = _key.PublicKey as RSA;
-            if (rsa == null)
-                return false;
-
-            SHA1 sha1 = SHA1.Create();
-            byte[] hash = sha1.ComputeHash(input);
-            if (rsa.VerifyHash(hash, signature, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1))
-                return true;
-
-            return false;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
+            samlHandler.ValidateToken(s_saml1_2_10, validationParameters, out SecurityToken validatedSamlToken);
         }
     }
 }

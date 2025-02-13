@@ -27,25 +27,19 @@ namespace Microsoft.IdentityModel.Xml
         {
             public const string Algorithm = "Algorithm";
             public const string AnyUri = "anyURI";
-            public const string EncodingType = "EncodingType";
             public const string Id = "Id";
             public const string NcName = "NCName";
             public const string Nil = "nil";
             public const string PrefixList = "PrefixList";
             public const string Type = "type";
             public const string URI = "URI";
-            public const string ValueType = "ValueType";
         }
 
         public static class Elements
         {
             public const string CanonicalizationMethod = "CanonicalizationMethod";
-            public const string CipherData = "CipherData";
-            public const string CipherValue = "CipherValue";
             public const string DigestMethod = "DigestMethod";
             public const string DigestValue = "DigestValue";
-            public const string EncryptedKey = "EncryptedKey";
-            public const string EncryptionMethod = "EncryptionMethod";
             public const string Exponent = "Exponent";
             public const string KeyInfo = "KeyInfo";
             public const string KeyName = "KeyName";
@@ -56,8 +50,6 @@ namespace Microsoft.IdentityModel.Xml
             public const string Reference = "Reference";
             public const string RetrievalMethod = "RetrievalMethod";
             public const string RSAKeyValue = "RSAKeyValue";
-            public const string KeyIdentifier = "KeyIdentifier";
-            public const string SecurityTokenReference = "SecurityTokenReference";
             public const string Signature = "Signature";
             public const string SignatureMethod = "SignatureMethod";
             public const string SignatureValue = "SignatureValue";
